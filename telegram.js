@@ -9,25 +9,58 @@ const { getBitcoinPrice, getEthereumPrice, getGramPrice } = require('./price');
 
 async function startBot() {
     let chatId = null;
-
+    let lastBitcoinPrice = null;
+    let lastEthereumPrice = null;
+    let lastGramPrice = null;
 
     bot.onText(/\/start/, async (msg) => {
         chatId = msg.chat.id;
-        const bitcoinPrice = await getBitcoinPrice();
-        const ethereumPrice = await getEthereumPrice();
-        const gramPrice = await getGramPrice();
+        
+        lastBitcoinPrice = await getBitcoinPrice();
+        lastEthereumPrice = await getEthereumPrice();
+        lastGramPrice = await getGramPrice();
 
-        bot.sendMessage(chatId, `Current Bitcoin price: ${bitcoinPrice}$ \nCurrent Ethereum price: ${ethereumPrice}$ \nCurrent Gram price: ${gramPrice}$`)
+        try {
+            bot.sendMessage(chatId, `Current Bitcoin price: ${lastBitcoinPrice}$ \nCurrent Ethereum price: ${lastEthereumPrice}$ \nCurrent Gram price: ${lastGramPrice}$`)
+        }
+
+        catch {
+            bot.sendMessage(chatId, `Can't get a current price`);
+        }
     });
 
     setInterval(async () => {
         if (!chatId) return;
-        const bitcoinPrice = await getBitcoinPrice();
-        const ethereumPrice = await getEthereumPrice();
-        const gramPrice = await getGramPrice();
+        const currentBitcoinPrice = await getBitcoinPrice();
+        const diff = ((currentBitcoinPrice - lastBitcoinPrice) / lastBitcoinPrice) * 100;
 
-        bot.sendMessage(chatId, `Current Bitcoin price: ${bitcoinPrice}$ \n Current Ethereum price: ${ethereumPrice}$ \n Current Gram price: ${gramPrice}$`)
-    }, 3600000);
+        if (Math.abs(diff) > 0.5){
+            bot.sendMessage(chatId, `Bitcoin changed ${diff.toFixed(2)}%, current price: ${currentBitcoinPrice}$`)
+            lastBitcoinPrice = currentBitcoinPrice;
+        } 
+    }, 30000);
+
+    setInterval(async () => {
+        if (!chatId) return;
+        const currentEthereumPrice = await getEthereumPrice();
+        const diff = ((currentEthereumPrice - lastEthereumPrice) / lastEthereumPrice) * 100;
+
+        if (Math.abs(diff) > 0.5){
+            bot.sendMessage(chatId, `Ethereum changed ${diff.toFixed(2)}%, current price: ${currentEthereumPrice}$`)
+            lastEthereumPrice = currentEthereumPrice;
+        } 
+    }, 30000);
+
+    setInterval(async () => {
+        if (!chatId) return;
+        const currentGramPrice = await getGramPrice();
+        const diff = ((currentGramPrice - lastGramPrice) / lastGramPrice) * 100;
+
+        if (Math.abs(diff) > 0.5){
+            bot.sendMessage(chatId, `Gram changed ${diff.toFixed(2)}%, current price: ${currentGramPrice}$`)
+            lastGramPrice = currentGramPrice;
+        } 
+    }, 30000);
 }
 
 module.exports = startBot;
