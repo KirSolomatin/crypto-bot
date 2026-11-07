@@ -5,14 +5,12 @@ const axios = require('axios');
 
 const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
 
-const { getBitcoinPrice, getEthereumPrice, getGramPrice } = require('./price');
-const {loadUsers, saveUser} = require('./users');
+const { getBitcoinPrice, checkBitcoinPrice } = require('./crypto/bitcoin');
+const { getEthereumPrice, checkEthereumPrice } = require('./crypto/ethereum');
+const { getGramPrice, checkGramPrice } = require('./crypto/gram');
+const { loadUsers, saveUser } = require('./users');
 
 async function startBot() {
-    let lastBitcoinPrice = null;
-    let lastEthereumPrice = null;
-    let lastGramPrice = null;
-
     bot.setMyCommands([
         { command: '/start', description: 'Start the bot' },
         { command: '/menu', description: 'Bot menu' },
@@ -22,12 +20,12 @@ async function startBot() {
         chatId = msg.chat.id;
         saveUser(chatId);
 
-        lastBitcoinPrice = await getBitcoinPrice();
-        lastEthereumPrice = await getEthereumPrice();
-        lastGramPrice = await getGramPrice();
+        let bitcoinPrice = await getBitcoinPrice();
+        let ethereumPrice = await getEthereumPrice();
+        let gramPrice = await getGramPrice();
 
         try {
-            bot.sendMessage(chatId, `Current Bitcoin price: ${lastBitcoinPrice}$ \nCurrent Ethereum price: ${lastEthereumPrice}$ \nCurrent Gram price: ${lastGramPrice}$`)
+            bot.sendMessage(chatId, `Current Bitcoin price: ${bitcoinPrice}$ \nCurrent Ethereum price: ${ethereumPrice}$ \nCurrent Gram price: ${gramPrice}$`)
         }
 
         catch {
@@ -68,50 +66,11 @@ async function startBot() {
         }
     });
 
-    setInterval(async () => {
-        let users = loadUsers();
-        const currentBitcoinPrice = await getBitcoinPrice();
-        const diff = ((currentBitcoinPrice - lastBitcoinPrice) / lastBitcoinPrice) * 100;
+    setInterval(() => checkBitcoinPrice(bot), 30000);
 
-        if (Math.abs(diff) > 0.5) {
-            for (const user of users) {
-                try {
-                    await bot.sendMessage(user, `Bitcoin changed ${diff.toFixed(2)}%, current price: ${currentBitcoinPrice}$`)
-                } catch (error) {
-                    console.error(error.message);
-                    console.log(loadUsers());
-                }
-            }
-            lastBitcoinPrice = currentBitcoinPrice;
-        }
-    }, 30000);
+    setInterval(() => checkEthereumPrice(bot), 30000);
 
-    setInterval(async () => {
-        let users = loadUsers();
-        const currentEthereumPrice = await getEthereumPrice();
-        const diff = ((currentEthereumPrice - lastEthereumPrice) / lastEthereumPrice) * 100;
-
-        if (Math.abs(diff) > 0.5) {
-            for (const user of users) {
-                await bot.sendMessage(user, `Ethereum changed ${diff.toFixed(2)}%, current price: ${currentEthereumPrice}$`)
-            }
-            lastEthereumPrice = currentEthereumPrice;
-        }
-    }, 30000);
-
-    setInterval(async () => {
-        let users = loadUsers();
-        const currentGramPrice = await getGramPrice();
-        const diff = ((currentGramPrice - lastGramPrice) / lastGramPrice) * 100;
-
-        if (Math.abs(diff) > 0.5) {
-            for (const user of users)
-            {
-                await bot.sendMessage(user, `Gram changed ${diff.toFixed(2)}%, current price: ${currentGramPrice}$`)
-            }
-            lastGramPrice = currentGramPrice;
-        }
-    }, 30000);
+    setInterval(() => checkGramPrice(bot), 30000);
 }
 
 module.exports = startBot;
