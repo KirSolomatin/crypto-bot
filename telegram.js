@@ -6,9 +6,9 @@ const axios = require('axios');
 const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
 
 const { getBitcoinPrice, getEthereumPrice, getGramPrice } = require('./price');
+const {loadUsers, saveUser} = require('./users');
 
 async function startBot() {
-    let chatId = null;
     let lastBitcoinPrice = null;
     let lastEthereumPrice = null;
     let lastGramPrice = null;
@@ -20,6 +20,7 @@ async function startBot() {
 
     bot.onText(/\/start/, async (msg) => {
         chatId = msg.chat.id;
+        saveUser(chatId);
 
         lastBitcoinPrice = await getBitcoinPrice();
         lastEthereumPrice = await getEthereumPrice();
@@ -68,34 +69,46 @@ async function startBot() {
     });
 
     setInterval(async () => {
-        if (!chatId) return;
+        let users = loadUsers();
         const currentBitcoinPrice = await getBitcoinPrice();
         const diff = ((currentBitcoinPrice - lastBitcoinPrice) / lastBitcoinPrice) * 100;
 
         if (Math.abs(diff) > 0.5) {
-            bot.sendMessage(chatId, `Bitcoin changed ${diff.toFixed(2)}%, current price: ${currentBitcoinPrice}$`)
+            for (const user of users) {
+                try {
+                    await bot.sendMessage(user, `Bitcoin changed ${diff.toFixed(2)}%, current price: ${currentBitcoinPrice}$`)
+                } catch (error) {
+                    console.error(error.message);
+                    console.log(loadUsers());
+                }
+            }
             lastBitcoinPrice = currentBitcoinPrice;
         }
     }, 30000);
 
     setInterval(async () => {
-        if (!chatId) return;
+        let users = loadUsers();
         const currentEthereumPrice = await getEthereumPrice();
         const diff = ((currentEthereumPrice - lastEthereumPrice) / lastEthereumPrice) * 100;
 
         if (Math.abs(diff) > 0.5) {
-            bot.sendMessage(chatId, `Ethereum changed ${diff.toFixed(2)}%, current price: ${currentEthereumPrice}$`)
+            for (const user of users) {
+                await bot.sendMessage(user, `Ethereum changed ${diff.toFixed(2)}%, current price: ${currentEthereumPrice}$`)
+            }
             lastEthereumPrice = currentEthereumPrice;
         }
     }, 30000);
 
     setInterval(async () => {
-        if (!chatId) return;
+        let users = loadUsers();
         const currentGramPrice = await getGramPrice();
         const diff = ((currentGramPrice - lastGramPrice) / lastGramPrice) * 100;
 
         if (Math.abs(diff) > 0.5) {
-            bot.sendMessage(chatId, `Gram changed ${diff.toFixed(2)}%, current price: ${currentGramPrice}$`)
+            for (const user of users)
+            {
+                await bot.sendMessage(user, `Gram changed ${diff.toFixed(2)}%, current price: ${currentGramPrice}$`)
+            }
             lastGramPrice = currentGramPrice;
         }
     }, 30000);
