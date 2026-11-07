@@ -66,7 +66,7 @@ async function startBot() {
         }
     });
 
-    setInterval(() => checkBitcoinPrice(bot), 30000);
+    setInterval(() => checkBitcoinPrice(bot), 3000);
 
     setInterval(() => checkEthereumPrice(bot), 30000);
 

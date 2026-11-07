@@ -17,7 +17,15 @@ function saveUser (chatId) {
     fs.writeFileSync(USERS, JSON.stringify(users, null, 2)); //write file with the new id
 }
 
+//function for deleting users
+function deleteUser (chatId) {
+    let users = loadUsers();
+
+    let  newUsersList = users.filter(user => user != chatId); //Rewrites the array using the filter method
+    fs.writeFileSync(USERS, JSON.stringify(newUsersList, null, 2));
+}
 module.exports = {
     loadUsers,
-    saveUser
+    saveUser,
+    deleteUser
 }
