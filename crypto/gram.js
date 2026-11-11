@@ -6,7 +6,7 @@ const { loadUsers, deleteUser } = require('../users');
 //function that get a current gram price, uses binance api
 async function getGramPrice() {
     const gram = await axios.get("https://api.binance.com/api/v3/ticker/price?symbol=GRAMUSDT");
-    return Number(gram.data.price).toFixed(3);
+    return Number(gram.data.price).toFixed(2);
 }
 
 //A function that checks for price changes; if the change is greater than 0.5 percent, it sends the price
