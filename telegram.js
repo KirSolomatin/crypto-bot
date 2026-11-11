@@ -62,9 +62,9 @@ async function startBot() {
                     }
                 });
                 break;
-
+            //btc menu
             case 'get_btc':
-                bot.sendMessage(chatId, 'Select a option:', {
+                bot.sendMessage(chatId, 'Bitcoin, select an option:', {
                     reply_markup: {
                         inline_keyboard: [
                             [{ text: 'Get the current price', callback_data: 'get_btc_current_price' }]
@@ -72,12 +72,47 @@ async function startBot() {
                     }
                 })
                 break;
-
+            //eth menu
+            case 'get_eth':
+                bot.sendMessage(chatId, 'Ethereum, select a option:', {
+                    reply_markup: {
+                        inline_keyboard: [
+                            [{ text: 'Get the current price', callback_data: 'get_eth_current_price' }]
+                        ]
+                    }
+                })
+                break;
+            //gram menu
+            case 'get_gram':
+                bot.sendMessage(chatId, 'Gram, select a option:', {
+                    reply_markup: {
+                        inline_keyboard: [
+                            [{ text: 'Get the current price', callback_data: 'get_gram_current_price' }]
+                        ]
+                    }
+                })
+                break;
+            //btc current price
             case 'get_btc_current_price':
                 let currentBitcoinPrice = await getBitcoinPrice();
 
                 bot.sendMessage(chatId, `Current Bitcoin price: ${currentBitcoinPrice}$`);
                 break;
+            //eth current price
+            case 'get_eth_current_price':
+                let currentEthereumPrice = await getEthereumPrice();
+
+                bot.sendMessage(chatId, `Current Ethereum price: ${currentEthereumPrice}$`);
+                break;
+            //gram current price
+            case 'get_gram_current_price':
+                let currentGramPrice = await getGramPrice();
+
+                bot.sendMessage(chatId, `Current Gram price: ${currentGramPrice}$`);
+                break;
+            //default response, prevents the bot from crashing
+            default:
+                bot.sendMessage(chatId, 'Sorry, an error occurred.');
         }
     });
 
