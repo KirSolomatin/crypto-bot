@@ -50,32 +50,34 @@ async function startBot() {
     bot.on('callback_query', async (query) => {
         const chatId = query.message.chat.id;
 
-        if (query.data === 'get_crypto') {
-            bot.sendMessage(chatId, 'Select a coin:', {
-                reply_markup: {
-                    inline_keyboard: [
-                        [{ text: 'BTC', callback_data: 'get_btc' }],
-                        [{ text: 'ETH', callback_data: 'get_eth' }],
-                        [{ text: 'GRAM', callback_data: 'get_gram' }]
-                    ]
-                }
-            });
-        }
+        switch (query.data) {
+            case 'get_crypto':
+                bot.sendMessage(chatId, 'Select a coin:', {
+                    reply_markup: {
+                        inline_keyboard: [
+                            [{ text: 'BTC', callback_data: 'get_btc' }],
+                            [{ text: 'ETH', callback_data: 'get_eth' }],
+                            [{ text: 'GRAM', callback_data: 'get_gram' }]
+                        ]
+                    }
+                });
+                break;
 
-        else if (query.data === 'get_btc') {
-            bot.sendMessage(chatId, 'Select a option:', {
-                reply_markup: {
-                    inline_keyboard: [
-                        [{text: 'Get the current price', callback_data: 'get_btc_current_price'}]
-                    ]
-                }
-            })
-        }
+            case 'get_btc':
+                bot.sendMessage(chatId, 'Select a option:', {
+                    reply_markup: {
+                        inline_keyboard: [
+                            [{ text: 'Get the current price', callback_data: 'get_btc_current_price' }]
+                        ]
+                    }
+                })
+                break;
 
-        else if (query.data === 'get_btc_current_price') {
-            let currentBitcoinPrice = await getBitcoinPrice();
+            case 'get_btc_current_price':
+                let currentBitcoinPrice = await getBitcoinPrice();
 
-            bot.sendMessage(chatId, `Current Bitcoin price: ${currentBitcoinPrice}$`);
+                bot.sendMessage(chatId, `Current Bitcoin price: ${currentBitcoinPrice}$`);
+                break;
         }
     });
 
