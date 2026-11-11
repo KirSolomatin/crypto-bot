@@ -17,19 +17,19 @@ async function checkBitcoinPrice(bot) {
 
     //if the difference is greater than 0.5
     if (Math.abs(diff) > 0.5) {
-        for (const user of users) {
+        for (const [chatId, data] of Object.entries(users)) {
             try {
                 //Sends new price to every user
-                await bot.sendMessage(user, `Bitcoin changed ${diff.toFixed(2)}%, current price: ${currentBitcoinPrice}$`)
+                await bot.sendMessage(chatId, `Bitcoin changed ${diff.toFixed(2)}%, current price: ${currentBitcoinPrice}$`)
             } catch (error) {
-                console.error(`Can't send the message to user ${user}`, error.message);
+                console.error(`Can't send the message to user ${chatId}`, error.message);
 
                 // 403: bot was blocked or kicked, 400 "chat not found": chat does not exist
                 const description = error.response?.body?.description || error.message;
                 const errorCode = error.response?.body?.error_code;
 
                 if (errorCode === 403 || description.includes('chat not found')) {
-                    deleteUser(user);
+                    deleteUser(chatId);
                 }
             }
         }

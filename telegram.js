@@ -17,8 +17,8 @@ async function startBot() {
     ]);
 
     bot.onText(/\/start/, async (msg) => {
-        // chatId = msg.chat.id;
-        // saveUser(chatId);
+        let chatId = msg.chat.id;
+        saveUser(chatId);
 
         // let bitcoinPrice = await getBitcoinPrice();
         // let ethereumPrice = await getEthereumPrice();
