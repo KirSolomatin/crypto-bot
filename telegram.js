@@ -19,18 +19,6 @@ async function startBot() {
     bot.onText(/\/start/, async (msg) => {
         let chatId = msg.chat.id;
         saveUser(chatId);
-
-        // let bitcoinPrice = await getBitcoinPrice();
-        // let ethereumPrice = await getEthereumPrice();
-        // let gramPrice = await getGramPrice();
-
-        // try {
-        //     bot.sendMessage(chatId, `Current Bitcoin price: ${bitcoinPrice}$ \nCurrent Ethereum price: ${ethereumPrice}$ \nCurrent Gram price: ${gramPrice}$`)
-        // }
-
-        // catch {
-        //     bot.sendMessage(chatId, `Can't get a current price`);
-        // }
     });
 
     //Menu interface
@@ -114,6 +102,8 @@ async function startBot() {
             default:
                 bot.sendMessage(chatId, 'Sorry, an error occurred.');
         }
+        
+        bot.answerCallbackQuery(query.id);
     });
 
     setInterval(() => checkBitcoinPrice(bot), 30000);
