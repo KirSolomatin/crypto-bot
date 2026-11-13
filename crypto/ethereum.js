@@ -15,21 +15,29 @@ async function checkEthereumPrice(bot) {
     const currentEthereumPrice = await getEthereumPrice(); //get current price
     const diff = ((currentEthereumPrice - lastEthereumPrice) / lastEthereumPrice) * 100; //calculates the difference as a percentage
 
+    //When the bot is launched for the first time, it should not send “changed Infinity%” 
+    if (lastEthereumPrice === null) {
+        lastEthereumPrice = currentEthereumPrice;
+        return;
+    }
+    
     //if the difference is greater than 0.5
     if (Math.abs(diff) > 0.5) {
         for (const [chatId, data] of Object.entries(users)) {
-            try {
-                //Sends new price to every user
-                await bot.sendMessage(chatId, `Ethereum changed ${diff.toFixed(2)}%, current price: ${currentEthereumPrice}$`)
-            } catch (error) {
-                console.error(`Can't send the message to user ${chatId}`, error.message);
+            if (data.coins.includes("ETH")) {
+                try {
+                    //Sends new price to every user
+                    await bot.sendMessage(chatId, `Ethereum changed ${diff.toFixed(2)}%, current price: ${currentEthereumPrice}$`)
+                } catch (error) {
+                    console.error(`Can't send the message to user ${chatId}`, error.message);
 
-                // 403: bot was blocked or kicked, 400 "chat not found": chat does not exist
-                const description = error.response?.body?.description || error.message;
-                const errorCode = error.response?.body?.error_code;
+                    // 403: bot was blocked or kicked, 400 "chat not found": chat does not exist
+                    const description = error.response?.body?.description || error.message;
+                    const errorCode = error.response?.body?.error_code;
 
-                if (errorCode === 403 || description.includes('chat not found')) {
-                    deleteUser(chatId);
+                    if (errorCode === 403 || description.includes('chat not found')) {
+                        deleteUser(chatId);
+                    }
                 }
             }
         }

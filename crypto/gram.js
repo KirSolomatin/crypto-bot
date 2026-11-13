@@ -15,21 +15,29 @@ async function checkGramPrice(bot) {
     const currentGramPrice = await getGramPrice(); //get current price
     const diff = ((currentGramPrice - lastGramPrice) / lastGramPrice) * 100; //calculates the difference as a percentage
 
-    //if the difference is greater than 0.5
-    if (Math.abs(diff) > 0.5) {
-        for (const [chatId, data] of Object.entries(users)) {
-            try {
-                //Sends new price to every user
-                await bot.sendMessage(chatId, `Gram changed ${diff.toFixed(2)}%, current price: ${currentGramPrice}$`)
-            } catch (error) {
-                console.error(`Can't send the message to user ${chatId}`, error.message);
-                
-                // 403: bot was blocked or kicked, 400 "chat not found": chat does not exist
-                const description = error.response?.body?.description || error.message;
-                const errorCode = error.response?.body?.error_code;
+    //When the bot is launched for the first time, it should not send “changed Infinity%” 
+    if (lastGramPrice === null) {
+        lastGramPrice = currentGramPrice;
+        return;
+    }
 
-                if (errorCode === 403 || description.includes('chat not found')) {
-                    deleteUser(chatId);
+    //if the difference is greater than 0.5
+    if (Math.abs(diff) >= 5) {
+        for (const [chatId, data] of Object.entries(users)) {
+            if (data.coins.includes("GRAM")) {
+                try {
+                    //Sends new price to every user
+                    await bot.sendMessage(chatId, `Gram changed ${diff.toFixed(2)}%, current price: ${currentGramPrice}$`)
+                } catch (error) {
+                    console.error(`Can't send the message to user ${chatId}`, error.message);
+                    
+                    // 403: bot was blocked or kicked, 400 "chat not found": chat does not exist
+                    const description = error.response?.body?.description || error.message;
+                    const errorCode = error.response?.body?.error_code;
+    
+                    if (errorCode === 403 || description.includes('chat not found')) {
+                        deleteUser(chatId);
+                    }
                 }
             }
         }
