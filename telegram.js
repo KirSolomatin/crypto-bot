@@ -19,6 +19,8 @@ async function startBot() {
     bot.onText(/\/start/, async (msg) => {
         let chatId = msg.chat.id;
         saveUser(chatId);
+
+        bot.sendMessage(chatId, "You're in! Alerts for BTC, ETH and GRAM are on. Use /menu to check prices or manage alerts.");
     });
 
     //Menu interface
