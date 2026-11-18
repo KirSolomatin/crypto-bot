@@ -8,7 +8,8 @@ const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
 const { getBitcoinPrice, checkBitcoinPrice } = require('./crypto/bitcoin');
 const { getEthereumPrice, checkEthereumPrice } = require('./crypto/ethereum');
 const { getGramPrice, checkGramPrice } = require('./crypto/gram');
-const {getGoldPrice, checkGoldPrice } = require('./metal/gold');
+const { getGoldPrice, checkGoldPrice } = require('./metal/gold');
+const { getSilverPrice, checkSilverPrice } = require('./metal/silver');
 const { loadUsers, saveUser, deleteAddCoin } = require('./users');
 
 async function startBot() {
@@ -98,9 +99,10 @@ async function startBot() {
                         ]
                     }
                 });
+                break;
             //gold menu
             case 'get_gold':
-                bot.sendMessage(chatId, 'Bitcoin, select an option:', {
+                bot.sendMessage(chatId, 'Gold, select an option:', {
                     reply_markup: {
                         inline_keyboard: [
                             [{ text: 'Get the current price', callback_data: 'get_gold_current_price' }],
@@ -109,6 +111,16 @@ async function startBot() {
                     }
                 })
                 break;
+            //silver menu
+            case 'get_silver':
+                bot.sendMessage(chatId, 'Silver, select an option:', {
+                    reply_markup: {
+                        inline_keyboard: [
+                            [{ text: 'Get the current price', callback_data: 'get_silver_current_price' }],
+                            [{ text: `Price alert  ${users[chatId].coins.includes("SILVER") ? '🟢' : '🔴'}`, callback_data: 'silver_price_alert' }]
+                        ]
+                    }
+                })
                 break;
             //btc current price
             case 'get_btc_current_price':
@@ -227,6 +239,36 @@ async function startBot() {
                 }
                 break;
             }
+            //silver current price
+            case 'get_silver_current_price':
+                let currentSilverPrice = await getSilverPrice();
+
+                bot.sendMessage(chatId, `Current Silver price: ${currentSilverPrice}$`);
+                break;
+            //on or off silver price alert
+            case 'silver_price_alert': {
+                deleteAddCoin(chatId, "SILVER"); //add or delete currency to the preference sheet of user 
+                let users = loadUsers(); //get updated sheet
+
+                //trys to edit sent message to update state of alerts in chat
+                try {
+                    await bot.editMessageReplyMarkup(
+                        {
+                            inline_keyboard: [
+                                [{ text: 'Get the current price', callback_data: 'get_silver_current_price' }],
+                                [{ text: `Price alert  ${users[chatId].coins.includes("SILVER") ? '🟢' : '🔴'}`, callback_data: 'silver_price_alert' }]
+                            ],
+                        },
+                        { chat_id: chatId, message_id: messageId }
+                    );
+                } catch (error) {                                                       //sends a message of error if something went wrong
+                    const description = error.response?.body?.description || "";
+                    if (!description.includes("message is not modified")) {
+                        console.error(error.message);
+                    }
+                }
+                break;
+            }
             //default response, prevents the bot from crashing
             default:
                 bot.sendMessage(chatId, 'Sorry, an error occurred.');
@@ -242,6 +284,8 @@ async function startBot() {
     setInterval(() => checkGramPrice(bot), 30000);
 
     setInterval(() => checkGoldPrice(bot), 30000);
+
+    setInterval(() => checkSilverPrice(bot), 30000);
 }
 
 module.exports = startBot;

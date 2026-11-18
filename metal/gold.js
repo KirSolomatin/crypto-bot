@@ -27,7 +27,7 @@ async function checkGoldPrice(bot) {
             if (data.coins.includes("GOLD")) {
                 try {
                     //Sends new price to every user
-                    await bot.sendMessage(chatId, `Gold changed ${diff.toFixed(2)}%, current price: ${currentGoldPrice}$`)
+                    await bot.sendMessage(chatId, `Gold changed ${diff.toFixed(2)}%, current price: ${currentGoldPrice}$ per troy ounce`)
                 } catch (error) {
                     console.error(`Can't send the message to user ${chatId}`, error.message);
 
