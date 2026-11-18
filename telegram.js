@@ -18,6 +18,11 @@ async function startBot() {
         { command: '/menu', description: 'Bot menu' },
     ]);
 
+    bot.on('polling_error', (error) => {
+        console.error('Polling error:', error.code, error.message);
+    }
+    );
+
     bot.onText(/\/start/, async (msg) => {
         let chatId = msg.chat.id;
         saveUser(chatId);
