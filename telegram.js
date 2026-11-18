@@ -44,6 +44,11 @@ async function startBot() {
         const messageId = query.message.message_id;
         const users = loadUsers();
 
+        if (!users[chatId]) {
+            saveUser(chatId);
+            users = loadUsers();
+        }
+
         switch (query.data) {
             case 'get_crypto':
                 bot.sendMessage(chatId, 'Select the coin:', {
