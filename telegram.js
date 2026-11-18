@@ -8,6 +8,7 @@ const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: true });
 const { getBitcoinPrice, checkBitcoinPrice } = require('./crypto/bitcoin');
 const { getEthereumPrice, checkEthereumPrice } = require('./crypto/ethereum');
 const { getGramPrice, checkGramPrice } = require('./crypto/gram');
+const {getGoldPrice, checkGoldPrice } = require('./metal/gold');
 const { loadUsers, saveUser, deleteAddCoin } = require('./users');
 
 async function startBot() {
@@ -44,12 +45,23 @@ async function startBot() {
 
         switch (query.data) {
             case 'get_crypto':
-                bot.sendMessage(chatId, 'Select a coin:', {
+                bot.sendMessage(chatId, 'Select the coin:', {
                     reply_markup: {
                         inline_keyboard: [
                             [{ text: 'BTC', callback_data: 'get_btc' }],
                             [{ text: 'ETH', callback_data: 'get_eth' }],
                             [{ text: 'GRAM', callback_data: 'get_gram' }]
+                        ]
+                    }
+                });
+                break;
+
+            case 'get_metal':
+                bot.sendMessage(chatId, 'Select the metal', {
+                    reply_markup: {
+                        inline_keyboard: [
+                            [{ text: 'Gold', callback_data: 'get_gold' }],
+                            [{ text: 'Silver', callback_data: 'get_silver' }]
                         ]
                     }
                 });
@@ -74,7 +86,7 @@ async function startBot() {
                             [{ text: `Price alert  ${users[chatId].coins.includes("ETH") ? '🟢' : '🔴'}`, callback_data: 'eth_price_alert' }]
                         ]
                     }
-                })
+                });
                 break;
             //gram menu
             case 'get_gram':
@@ -85,7 +97,18 @@ async function startBot() {
                             [{ text: `Price alert  ${users[chatId].coins.includes("GRAM") ? '🟢' : '🔴'}`, callback_data: 'gram_price_alert' }]
                         ]
                     }
+                });
+            //gold menu
+            case 'get_gold':
+                bot.sendMessage(chatId, 'Bitcoin, select an option:', {
+                    reply_markup: {
+                        inline_keyboard: [
+                            [{ text: 'Get the current price', callback_data: 'get_gold_current_price' }],
+                            [{ text: `Price alert  ${users[chatId].coins.includes("GOLD") ? '🟢' : '🔴'}`, callback_data: 'gold_price_alert' }]
+                        ]
+                    }
                 })
+                break;
                 break;
             //btc current price
             case 'get_btc_current_price':
@@ -151,6 +174,7 @@ async function startBot() {
 
                 bot.sendMessage(chatId, `Current Gram price: ${currentGramPrice}$`);
                 break;
+            //on or off gram price alert
             case 'gram_price_alert': {
                 deleteAddCoin(chatId, "GRAM");
                 let users = loadUsers();
@@ -173,6 +197,36 @@ async function startBot() {
                 }
                 break;
             }
+            //gold current price
+            case 'get_gold_current_price':
+                let currentGoldPrice = await getGoldPrice();
+
+                bot.sendMessage(chatId, `Current Gold price: ${currentGoldPrice}$`);
+                break;
+            //on or off gold price alert
+            case 'gold_price_alert': {
+                deleteAddCoin(chatId, "GOLD"); //add or delete currency to the preference sheet of user 
+                let users = loadUsers(); //get updated sheet
+
+                //trys to edit sent message to update state of alerts in chat
+                try {
+                    await bot.editMessageReplyMarkup(
+                        {
+                            inline_keyboard: [
+                                [{ text: 'Get the current price', callback_data: 'get_gold_current_price' }],
+                                [{ text: `Price alert  ${users[chatId].coins.includes("GOLD") ? '🟢' : '🔴'}`, callback_data: 'gold_price_alert' }]
+                            ],
+                        },
+                        { chat_id: chatId, message_id: messageId }
+                    );
+                } catch (error) {                                                       //sends a message of error if something went wrong
+                    const description = error.response?.body?.description || "";
+                    if (!description.includes("message is not modified")) {
+                        console.error(error.message);
+                    }
+                }
+                break;
+            }
             //default response, prevents the bot from crashing
             default:
                 bot.sendMessage(chatId, 'Sorry, an error occurred.');
@@ -186,6 +240,8 @@ async function startBot() {
     setInterval(() => checkEthereumPrice(bot), 30000);
 
     setInterval(() => checkGramPrice(bot), 30000);
+
+    setInterval(() => checkGoldPrice(bot), 30000);
 }
 
 module.exports = startBot;
